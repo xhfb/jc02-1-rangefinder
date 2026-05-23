@@ -1,1 +1,129 @@
-# JC02-1 婵€鍏夋祴璺濇ā缁?Python 椹卞姩  鍩轰簬 UART 閫氳鍗忚鐨?JC02-1 婵€鍏夋祴璺濇ā缁?Python 椹卞姩搴擄紝鏀寔鍗曟娴嬮噺涓庤繛缁祴閲忥紝閫傜敤浜?Windows / Linux / macOS銆? ## 鐗规€? - 瀹屾暣瀹炵幇 JC02-1 涓插彛閫氳鍗忚锛堝抚鍚屾銆佹牎楠屽拰銆佸懡浠ゅ簲绛旓級 - 鏀寔鍗曟娴嬮噺銆佽繛缁祴閲忋€佸浣嶆帶鍒?- 瑙ｆ瀽璺濈銆佽搴︺€侀€熷害绛?19 瀛楄妭娴嬮噺鏁版嵁鍩?- 涓婁笅鏂囩鐞嗗櫒锛坄with` 璇彞锛夎嚜鍔ㄧ鐞嗕覆鍙ｇ敓鍛藉懆鏈?- 绫诲瀷娉ㄨВ锛屼究浜?IDE 鎻愮ず  ## 纭欢瑕佹眰  | 椤圭洰 | 璇存槑 | |------|------| | 妯＄粍 | JC02-1 婵€鍏夋祴璺濇ā缁?| | 鎺ュ彛 | UART锛圱TL 鐢靛钩锛夛紝榛樿 9600 8N1 | | 渚涚數 | +3.3V ~ +3.8V | | 杩炴帴 | 妯＄粍 TX 鈫?涓绘満 RX锛屾ā缁?RX 鈫?涓绘満 TX锛屽叡鍦?|  > 璇峰皢 Power ON 寮曡剼鎷夐珮鍚庡啀杩涜閫氳銆備緵鐢电數鍘嬭秴鍑鸿寖鍥村彲鑳芥崯鍧忔ā缁勩€? ## 瀹夎  ```bash git clone https://github.com/xhfb/jc02-1-rangefinder.git cd jc02-1-rangefinder pip install -r requirements.txt ```  鎴栫洿鎺ュ皢 `jc02_1` 鐩綍澶嶅埗鍒颁綘鐨勯」鐩腑锛屽苟瀹夎渚濊禆锛? ```bash pip install pyserial>=3.5 ```  ## 蹇€熷紑濮? ### 鍗曟娴嬮噺  ```python from jc02_1 import JC02LaserRangefinder  with JC02LaserRangefinder("COM3") as sensor:  # Linux 涓嬮€氬父涓?/dev/ttyUSB0     sensor.wait_init()          # 绛夊緟涓婄數 "init ok" 淇℃伅     result = sensor.single_measure()     print(f"璺濈: {result.distance_display}")     print(f"瑙掑害: {result.angle_deg}掳")     print(f"閫熷害: {result.speed_kmh} km/h") ```  ### 杩炵画娴嬮噺  ```python from jc02_1 import JC02LaserRangefinder  with JC02LaserRangefinder("COM3") as sensor:     sensor.wait_init()     sensor.start_continuous()     try:         for measurement in sensor.iter_measurements(timeout=2.0):             print(measurement.distance_m, "m")     finally:         sensor.stop_continuous() ```  ## API 姒傝  | 绫?/ 鏂规硶 | 璇存槑 | |-----------|------| | `JC02LaserRangefinder(port, baudrate=9600, address=0x00, timeout=1.5)` | 涓婚┍鍔ㄧ被 | | `wait_init()` | 绛夊緟妯＄粍涓婄數鍒濆鍖栦俊鎭?| | `single_measure()` | 鍗曟娴嬮噺锛岃繑鍥?`MeasurementResult` | | `start_continuous()` / `stop_continuous()` | 鍚姩 / 鍋滄杩炵画娴嬮噺 | | `iter_measurements()` | 杩炵画娴嬮噺鏁版嵁杩唬鍣?| | `reset()` | 澶嶄綅妯＄粍 | | `MeasurementResult` | 娴嬮噺缁撴灉鏁版嵁绫?|  ### MeasurementResult 瀛楁  | 瀛楁 | 鍗曚綅 | 璇存槑 | |------|------|------| | `distance_m` | 绫?| 璺濈锛堝凡鎹㈢畻锛?| | `angle_deg` | 掳 | 瑙掑害 | | `horizontal_angle_deg` | 掳 | 姘村钩瑙?| | `elevation_angle_deg` | 掳 | 楂樹綆瑙?| | `direction_angle_deg` | 掳 | 鏂瑰悜瑙?| | `speed_kmh` | km/h | 閫熷害 | | `distance_display` | 鈥?| 鏍煎紡鍖栬窛绂诲瓧绗︿覆 |  ## 閫氳鍗忚鎽樿  - **甯ф牸寮?*锛歚AE A7 | 闀垮害 | 鍦板潃 | 鍛戒护 | 鏁版嵁 | 鏍￠獙鍜?| BC BE` - **鏍￠獙鍜?*锛歚(闀垮害 + 鍦板潃 + 鍛戒护 + sum(鏁版嵁)) & 0xFF` - **鍛戒护瀛?*锛氬浣?`0x0B`銆佸崟娆℃祴閲?`0x05`銆佽繛缁惎鍔?`0x0E`銆佽繛缁仠姝?`0x0F` - **搴旂瓟鍛戒护瀛?*锛氬師鍛戒护瀛?\| `0x80`  璇︾粏鍗忚璇峰弬闃呬粨搴撳唴 `JC02-1 婵€鍏夋祴璺濇ā缁勮鏄庝功.md`銆? ## 寮傚父澶勭悊  ```python from jc02_1 import JC02LaserRangefinder, JC02TimeoutError, JC02ProtocolError  try:     with JC02LaserRangefinder("COM3") as sensor:         result = sensor.single_measure() except JC02TimeoutError:     print("绛夊緟搴旂瓟鎴栨祴閲忔暟鎹秴鏃?) except JC02ProtocolError:     print("甯ф牎楠屾垨鏁版嵁瑙ｆ瀽澶辫触") ```  ## 椤圭洰缁撴瀯  ``` jc02-1-rangefinder/ 鈹溾攢鈹€ jc02_1/ 鈹?  鈹溾攢鈹€ __init__.py       # 鍖呭叆鍙?鈹?  鈹斺攢鈹€ rangefinder.py    # 椹卞姩瀹炵幇 鈹溾攢鈹€ requirements.txt 鈹溾攢鈹€ README.md 鈹斺攢鈹€ JC02-1 婵€鍏夋祴璺濇ā缁勮鏄庝功.md ```  ## 璁稿彲璇? MIT License
+# JC02-1 激光测距模组 Python 驱动
+
+基于 UART 通讯协议的 JC02-1 激光测距模组 Python 驱动库，支持单次测量与连续测量，适用于 Windows / Linux / macOS。
+
+## 特性
+
+- 完整实现 JC02-1 串口通讯协议（帧同步、校验和、命令应答）
+- 支持单次测量、连续测量、复位控制
+- 解析距离、角度、速度等 19 字节测量数据域
+- 上下文管理器（`with` 语句）自动管理串口生命周期
+- 类型注解，便于 IDE 提示
+
+## 硬件要求
+
+| 项目 | 说明 |
+|------|------|
+| 模组 | JC02-1 激光测距模组 |
+| 接口 | UART（TTL 电平），默认 9600 8N1 |
+| 供电 | +3.3V ~ +3.8V |
+| 连接 | 模组 TX → 主机 RX，模组 RX → 主机 TX，共地 |
+
+> 请将 Power ON 引脚拉高后再进行通讯。供电电压超出范围可能损坏模组。
+
+## 安装
+
+```bash
+git clone https://github.com/xhfb/jc02-1-rangefinder.git
+cd jc02-1-rangefinder
+pip install -r requirements.txt
+```
+
+或直接将 `jc02_1` 目录复制到你的项目中，并安装依赖：
+
+```bash
+pip install pyserial>=3.5
+```
+
+## 快速开始
+
+### 单次测量
+
+```python
+from jc02_1 import JC02LaserRangefinder
+
+with JC02LaserRangefinder("COM3") as sensor:  # Linux 下通常为 /dev/ttyUSB0
+    sensor.wait_init()          # 等待上电 "init ok" 信息
+    result = sensor.single_measure()
+    print(f"距离: {result.distance_display}")
+    print(f"角度: {result.angle_deg}°")
+    print(f"速度: {result.speed_kmh} km/h")
+```
+
+### 连续测量
+
+```python
+from jc02_1 import JC02LaserRangefinder
+
+with JC02LaserRangefinder("COM3") as sensor:
+    sensor.wait_init()
+    sensor.start_continuous()
+    try:
+        for measurement in sensor.iter_measurements(timeout=2.0):
+            print(measurement.distance_m, "m")
+    finally:
+        sensor.stop_continuous()
+```
+
+## API 概览
+
+| 类 / 方法 | 说明 |
+|-----------|------|
+| `JC02LaserRangefinder(port, baudrate=9600, address=0x00, timeout=1.5)` | 主驱动类 |
+| `wait_init()` | 等待模组上电初始化信息 |
+| `single_measure()` | 单次测量，返回 `MeasurementResult` |
+| `start_continuous()` / `stop_continuous()` | 启动 / 停止连续测量 |
+| `iter_measurements()` | 连续测量数据迭代器 |
+| `reset()` | 复位模组 |
+| `MeasurementResult` | 测量结果数据类 |
+
+### MeasurementResult 字段
+
+| 字段 | 单位 | 说明 |
+|------|------|------|
+| `distance_m` | 米 | 距离（已换算） |
+| `angle_deg` | ° | 角度 |
+| `horizontal_angle_deg` | ° | 水平角 |
+| `elevation_angle_deg` | ° | 高低角 |
+| `direction_angle_deg` | ° | 方向角 |
+| `speed_kmh` | km/h | 速度 |
+| `distance_display` | — | 格式化距离字符串 |
+
+## 通讯协议摘要
+
+- **帧格式**：`AE A7 | 长度 | 地址 | 命令 | 数据 | 校验和 | BC BE`
+- **校验和**：`(长度 + 地址 + 命令 + sum(数据)) & 0xFF`
+- **命令字**：复位 `0x0B`、单次测量 `0x05`、连续启动 `0x0E`、连续停止 `0x0F`
+- **应答命令字**：原命令字 \| `0x80`
+
+详细协议请参阅仓库内 `JC02-1 激光测距模组说明书.md`。
+
+## 异常处理
+
+```python
+from jc02_1 import JC02LaserRangefinder, JC02TimeoutError, JC02ProtocolError
+
+try:
+    with JC02LaserRangefinder("COM3") as sensor:
+        result = sensor.single_measure()
+except JC02TimeoutError:
+    print("等待应答或测量数据超时")
+except JC02ProtocolError:
+    print("帧校验或数据解析失败")
+```
+
+## 项目结构
+
+```
+jc02-1-rangefinder/
+├── jc02_1/
+│   ├── __init__.py       # 包入口
+│   └── rangefinder.py    # 驱动实现
+├── requirements.txt
+├── README.md
+└── JC02-1 激光测距模组说明书.md
+```
+
+## 许可证
+
+MIT License
